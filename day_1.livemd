@@ -1,0 +1,106 @@
+# Day 1
+
+## Star 1
+
+The newly-improved calibration document consists of lines of text; each line originally contained a specific calibration value that the Elves now need to recover. On each line, the calibration value can be found by combining the first digit and the last digit (in that order) to form a single two-digit number.
+
+For example:
+
+```
+1abc2
+pqr3stu8vwx
+a1b2c3d4e5f
+treb7uchet
+```
+
+In this example, the calibration values of these four lines are 12, 38, 15, and 77. Adding these together produces 142.
+
+Consider your entire calibration document. What is the sum of all of the calibration values?
+
+```elixir
+"input_day_1_1.txt"
+|> File.read!()
+|> String.split("\n")
+|> Enum.map(fn line ->
+  first_int =
+    line
+    |> String.codepoints()
+    |> Enum.find(fn char -> Integer.parse(char) != :error end)
+
+  last_int =
+    line
+    |> String.reverse()
+    |> String.codepoints()
+    |> Enum.find(fn char -> Integer.parse(char) != :error end)
+
+  case Integer.parse("#{first_int}#{last_int}") do
+    {result, _} -> result
+    _ -> nil
+  end
+end)
+|> Enum.reject(&is_nil/1)
+|> Enum.sum()
+```
+
+## Star 2
+
+Your calculation isn't quite right. It looks like some of the digits are actually spelled out with letters: one, two, three, four, five, six, seven, eight, and nine also count as valid "digits".
+
+Equipped with this new information, you now need to find the real first and last digit on each line. For example:
+
+```
+two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen
+```
+
+In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Adding these together produces 281.
+
+What is the sum of all of the calibration values?
+
+```elixir
+"input_day_1_2.txt"
+|> File.read!()
+|> String.split("\n")
+|> Enum.map(fn line ->
+  # From reddit: https://www.reddit.com/r/adventofcode/comments/1884fpl/2023_day_1for_those_who_stuck_on_part_2/
+  #
+  # The right calibration values for string 
+  # "eighthree" is 83 and for "sevenine" is 79.
+  # 
+  # The examples do not cover such cases.
+  line
+  |> String.replace("one", "o1e")
+  |> String.replace("two", "t2o")
+  |> String.replace("three", "t3e")
+  |> String.replace("four", "f4r")
+  |> String.replace("five", "f5e")
+  |> String.replace("six", "s6x")
+  |> String.replace("seven", "s7n")
+  |> String.replace("eight", "e8t")
+  |> String.replace("nine", "n9e")
+end)
+|> Enum.map(fn line ->
+  first_int =
+    line
+    |> String.codepoints()
+    |> Enum.find(fn char -> Integer.parse(char) != :error end)
+
+  last_int =
+    line
+    |> String.reverse()
+    |> String.codepoints()
+    |> Enum.find(fn char -> Integer.parse(char) != :error end)
+
+  case Integer.parse("#{first_int}#{last_int}") do
+    {result, _} -> result
+    _ -> nil
+  end
+end)
+|> Enum.reject(&is_nil/1)
+|> Enum.sum()
+```
