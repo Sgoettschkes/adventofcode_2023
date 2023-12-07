@@ -201,14 +201,12 @@ defmodule Day7Star14 do
       hand_count
       |> Enum.find({"J", 0}, fn {k, _} -> k == "J" end)
       |> then(fn {_, g} -> g end)
-      |> IO.inspect()
 
     non_j_max_count =
       hand_count
       |> Enum.reject(fn {k, _} -> k == "J" end)
       |> Enum.max_by(fn {_, g} -> g end)
       |> then(fn {_, g} -> g end)
-      |> IO.inspect()
 
     non_j_max_count + j_count == 3
   end
@@ -280,7 +278,6 @@ end
   |> Day7Star14.rank_hand()
   |> Day7Star14.create_sort_key()
 end)
-|> IO.inspect()
 |> Enum.sort_by(fn %{sort_key: sort_key} -> sort_key end, :asc)
 |> Enum.with_index(1)
 |> Enum.map(fn {%{bid: bid}, rank} -> bid * rank end)
