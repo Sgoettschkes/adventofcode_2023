@@ -1,0 +1,317 @@
+# Day 13
+
+## Star 25
+
+You note down the patterns of ash (.) and rocks (#) that you see as you walk (your puzzle input); perhaps by carefully analyzing these patterns, you can figure out where the mirrors are!
+
+For example:
+
+```
+#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#
+```
+
+To find the reflection in each pattern, you need to find a perfect reflection across either a horizontal line between two rows or across a vertical line between two columns.
+
+In the first pattern, the reflection is across a vertical line between two columns; arrows on each of the two columns point at the line between the columns:
+
+```
+123456789
+    ><   
+#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+    ><   
+123456789
+```
+
+In this pattern, the line of reflection is the vertical line between columns 5 and 6. Because the vertical line is not perfectly in the middle of the pattern, part of the pattern (column 1) has nowhere to reflect onto and can be ignored; every other column has a reflected column within the pattern and must match exactly: column 2 matches column 9, column 3 matches 8, 4 matches 7, and 5 matches 6.
+
+The second pattern reflects across a horizontal line instead:
+
+```
+1 #...##..# 1
+2 #....#..# 2
+3 ..##..### 3
+4v#####.##.v4
+5^#####.##.^5
+6 ..##..### 6
+7 #....#..# 7
+```
+
+This pattern reflects across the horizontal line between rows 4 and 5. Row 1 would reflect with a hypothetical row 8, but since that's not in the pattern, row 1 doesn't need to match anything. The remaining rows match: row 2 matches row 7, row 3 matches row 6, and row 4 matches row 5.
+
+To summarize your pattern notes, add up the number of columns to the left of each vertical line of reflection; to that, also add 100 multiplied by the number of rows above each horizontal line of reflection. In the above example, the first pattern's vertical line has 5 columns to its left and the second pattern's horizontal line has 4 rows above it, a total of 405.
+
+Find the line of reflection in each of the patterns in your notes. What number do you get after summarizing all of your notes?
+
+```elixir
+defmodule Day13Star25 do
+  def vertical_reflection_lines(puzzle) do
+    case vertical_reflection_line(puzzle) do
+      0 ->
+        case vertical_reflection_line(Enum.map(puzzle, &String.reverse/1)) do
+          0 -> 0
+          num -> String.length(Enum.at(puzzle, 0)) - num
+        end
+
+      num ->
+        num
+    end
+  end
+
+  defp vertical_reflection_line(puzzle) do
+    puzzle
+    |> Enum.map(&String.split(&1, "", trim: true))
+    |> rotate()
+    |> Enum.map(&Enum.join/1)
+    |> horizontal_reflection_line()
+  end
+
+  defp rotate(lines) do
+    lines |> Enum.zip() |> Enum.map(&Tuple.to_list/1)
+  end
+
+  def horizontal_reflection_lines(puzzle) do
+    case horizontal_reflection_line(puzzle) do
+      0 ->
+        case horizontal_reflection_line(Enum.reverse(puzzle)) do
+          0 -> 0
+          num -> length(puzzle) - num
+        end
+
+      num ->
+        num
+    end
+  end
+
+  defp horizontal_reflection_line(puzzle, lines_deleted \\ 0)
+  defp horizontal_reflection_line([], _), do: 0
+
+  defp horizontal_reflection_line(puzzle, lines_deleted) do
+    if reflection?(puzzle) do
+      lines_deleted + round(length(puzzle) / 2)
+    else
+      horizontal_reflection_line(tl(puzzle), lines_deleted + 1)
+    end
+  end
+
+  defp reflection?([]), do: true
+  defp reflection?(puzzle) when length(puzzle) == 1, do: false
+
+  defp reflection?(puzzle) do
+    List.first(puzzle) == List.last(puzzle) &&
+      reflection?(
+        puzzle
+        |> List.delete_at(0)
+        |> List.delete_at(-1)
+      )
+  end
+end
+
+"input_day_13_1.txt"
+|> File.read!()
+|> String.split("\n\n", trim: true)
+|> Enum.map(fn puzzle_str ->
+  puzzle = String.split(puzzle_str, "\n", trim: true)
+
+  Day13Star25.vertical_reflection_lines(puzzle) +
+    Day13Star25.horizontal_reflection_lines(puzzle) * 100
+end)
+|> Enum.sum()
+```
+
+## Star 26
+
+You resume walking through the valley of mirrors and - SMACK! - run directly into one. Hopefully nobody was watching, because that must have been pretty embarrassing.
+
+Upon closer inspection, you discover that every mirror has exactly one smudge: exactly one . or # should be the opposite type.
+
+In each pattern, you'll need to locate and fix the smudge that causes a different reflection line to be valid. (The old reflection line won't necessarily continue being valid after the smudge is fixed.)
+
+Here's the above example again:
+
+```
+#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#
+```
+
+The first pattern's smudge is in the top-left corner. If the top-left # were instead ., it would have a different, horizontal line of reflection:
+
+```
+1 ..##..##. 1
+2 ..#.##.#. 2
+3v##......#v3
+4^##......#^4
+5 ..#.##.#. 5
+6 ..##..##. 6
+7 #.#.##.#. 7
+```
+
+With the smudge in the top-left corner repaired, a new horizontal line of reflection between rows 3 and 4 now exists. Row 7 has no corresponding reflected row and can be ignored, but every other row matches exactly: row 1 matches row 6, row 2 matches row 5, and row 3 matches row 4.
+
+In the second pattern, the smudge can be fixed by changing the fifth symbol on row 2 from . to #:
+
+```
+1v#...##..#v1
+2^#...##..#^2
+3 ..##..### 3
+4 #####.##. 4
+5 #####.##. 5
+6 ..##..### 6
+7 #....#..# 7
+```
+
+Now, the pattern has a different horizontal line of reflection between rows 1 and 2.
+
+Summarize your notes as before, but instead use the new different reflection lines. In this example, the first pattern's new horizontal line has 3 rows above it and the second pattern's new horizontal line has 1 row above it, summarizing to the value 400.
+
+In each pattern, fix the smudge and find the different line of reflection. What number do you get after summarizing the new reflection line in each pattern in your notes?
+
+```elixir
+defmodule Day13Star26 do
+  def generate_all_variants(puzzle) do
+    Enum.map(0..(length(puzzle) - 1), fn row ->
+      Enum.map(0..(String.length(Enum.at(puzzle, 0)) - 1), fn column ->
+        {first, second} = puzzle |> Enum.at(row) |> String.split_at(column)
+
+        char =
+          case String.first(second) do
+            "." -> "#"
+            "#" -> "."
+          end
+
+        newline = first <> char <> String.slice(second, 1..(String.length(second) - 1))
+        List.replace_at(puzzle, row, newline)
+      end)
+    end)
+  end
+
+  def vertical_reflection_lines(puzzle) do
+    case vertical_reflection_line(puzzle) do
+      0 ->
+        case vertical_reflection_line(Enum.map(puzzle, &String.reverse/1)) do
+          0 -> 0
+          num -> String.length(Enum.at(puzzle, 0)) - num
+        end
+
+      num ->
+        num
+    end
+  end
+
+  defp vertical_reflection_line(puzzle) do
+    puzzle
+    |> Enum.map(&String.split(&1, "", trim: true))
+    |> rotate()
+    |> Enum.map(&Enum.join/1)
+    |> horizontal_reflection_line()
+  end
+
+  defp rotate(lines) do
+    lines |> Enum.zip() |> Enum.map(&Tuple.to_list/1)
+  end
+
+  def horizontal_reflection_lines(puzzle) do
+    case horizontal_reflection_line(puzzle) do
+      0 ->
+        case horizontal_reflection_line(Enum.reverse(puzzle)) do
+          0 -> 0
+          num -> length(puzzle) - num
+        end
+
+      num ->
+        num
+    end
+  end
+
+  defp horizontal_reflection_line(puzzle, lines_deleted \\ 0)
+  defp horizontal_reflection_line([], _), do: 0
+
+  defp horizontal_reflection_line(puzzle, lines_deleted) do
+    if reflection?(puzzle) do
+      lines_deleted + round(length(puzzle) / 2)
+    else
+      horizontal_reflection_line(tl(puzzle), lines_deleted + 1)
+    end
+  end
+
+  defp reflection?(puzzle, wildcards \\ 0)
+  defp reflection?([], 1), do: true
+  defp reflection?([], _), do: false
+  defp reflection?(_, wildcards) when wildcards > 1, do: false
+  defp reflection?(puzzle, _wildcards) when length(puzzle) == 1, do: false
+
+  defp reflection?(puzzle, wildcards) do
+    cond do
+      List.first(puzzle) == List.last(puzzle) ->
+        reflection?(
+          puzzle
+          |> List.delete_at(0)
+          |> List.delete_at(-1),
+          wildcards
+        )
+
+      count_diffs(List.first(puzzle), List.last(puzzle)) == 1 ->
+        reflection?(
+          puzzle
+          |> List.delete_at(0)
+          |> List.delete_at(-1),
+          wildcards + 1
+        )
+
+      true ->
+        false
+    end
+  end
+
+  defp count_diffs(line1, line2) when is_binary(line1) and is_binary(line2) do
+    count_diffs(String.split(line1, "", trim: true), String.split(line2, "", trim: true))
+  end
+
+  defp count_diffs([], []), do: 0
+  defp count_diffs([h1 | t1], [h2 | t2]) when h1 == h2, do: count_diffs(t1, t2)
+  defp count_diffs([_h1 | t1], [_h2 | t2]), do: 1 + count_diffs(t1, t2)
+end
+
+"input_day_13_2.txt"
+|> File.read!()
+|> String.split("\n\n", trim: true)
+|> Enum.map(fn puzzle_str ->
+  puzzle = String.split(puzzle_str, "\n", trim: true)
+
+  Day13Star26.vertical_reflection_lines(puzzle) +
+    Day13Star26.horizontal_reflection_lines(puzzle) * 100
+end)
+|> Enum.sum()
+```
