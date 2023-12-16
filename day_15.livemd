@@ -1,6 +1,6 @@
 # Day 15
 
-## Star 28
+## Star 29
 
 The HASH algorithm is a way to turn any string of characters into a single number in the range 0 to 255. To run the HASH algorithm on a string, start with a current value of 0. Then, for each character in the string starting from the beginning:
 
